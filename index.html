@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>จัดเก็บไฟล์กลุ่มงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  /* ===== ตั้งค่า: แก้ 2 บรรทัดนี้ ===== */
+  const LIFF_ID = '2012248951-Bzd00kL2';
+  const GAS_URL = 'ใhttps://script.google.com/macros/s/AKfycbxqj7rUYJ5fXYig87Bgaw_7-WS3eAsXOlNRx-3X7VEGoYDrQo5k38WHeSJkBkIkuI4O/exec';   // https://script.google.com/macros/s/xxxx/exec
+</script>
+<style>
+  :root {
+    --bg: #f4f6f5; --card: #ffffff; --ink: #18211f; --muted: #66716e; --line: #e2e7e5;
+    --accent: #0f766e; --accent-ink: #ffffff; --accent-soft: #e3f2ef; --warn: #b42318; --star: #b7791f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101413; --card: #1a201e; --ink: #e8eeec; --muted: #9aa6a2; --line: #2b3431;
+      --accent: #2dd4bf; --accent-ink: #062a26; --accent-soft: #163b36; --warn: #f97066; --star: #f6c453;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101413; --card: #1a201e; --ink: #e8eeec; --muted: #9aa6a2; --line: #2b3431;
+    --accent: #2dd4bf; --accent-ink: #062a26; --accent-soft: #163b36; --warn: #f97066; --star: #f6c453;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans Thai", system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 16px 0; }
+  .who { font-size: 12px; color: var(--muted); }
+  h1 { font-size: 18px; margin: 0 0 10px; font-weight: 700; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .tab { flex: 1; padding: 10px 0; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600;
+    border-bottom: 3px solid transparent; cursor: pointer; }
+  .tab[aria-selected="true"] { color: var(--accent); border-color: var(--accent); }
+  .badge { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 10px;
+    background: var(--warn); color: #fff; font-size: 12px; line-height: 20px; }
+  .badge[hidden], [hidden] { display: none !important; }
+  main { padding: 12px 16px 110px; }
+  section[hidden] { display: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .label { font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; }
+  .file { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; padding: 8px 0;
+    border-bottom: 1px solid var(--line); }
+  .file:last-child { border-bottom: 0; }
+  .file input[type=checkbox] { width: 20px; height: 20px; margin-top: 8px; accent-color: var(--accent); }
+  .file input[type=text] { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; }
+  .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .search { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--ink); font: inherit; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 18px;
+    padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip.sel, .node.sel > .row { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .tree { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--line);
+    cursor: pointer; border-left: 3px solid transparent; }
+  .node:last-child > .row { border-bottom: 0; }
+  .tog { width: 22px; flex: 0 0 22px; text-align: center; color: var(--muted); border: 0; background: none; font: inherit; cursor: pointer; padding: 0; }
+  .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kids[hidden] { display: none; }
+  .path { font-size: 12px; color: var(--muted); }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--card); border-top: 1px solid var(--line); z-index: 10; }
+  .bar .to { font-size: 13px; color: var(--muted); margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn { display: block; width: 100%; padding: 12px; border-radius: 10px; border: 0; background: var(--accent);
+    color: var(--accent-ink); font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; text-align: center; text-decoration: none; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--warn); font-weight: 600; font-size: 14px; padding: 8px; }
+  .res { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+  .res:last-child { border-bottom: 0; }
+  .res b { font-weight: 600; color: var(--accent); word-break: break-word; }
+  .empty { text-align: center; color: var(--muted); padding: 24px 8px; }
+  .toast { position: fixed; left: 16px; right: 16px; top: 16px; padding: 12px 14px; border-radius: 10px;
+    background: var(--ink); color: var(--bg); z-index: 20; font-size: 14px; }
+  .ok { color: var(--accent); font-weight: 700; font-size: 17px; }
+  .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: s 0.8s linear infinite; vertical-align: -3px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .star { color: var(--star); }
+</style>
+</head>
+<body>
+<header>
+  <div class="who" id="who">กำลังโหลด…</div>
+  <h1>📁 Drive กลุ่มงาน</h1>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-save" aria-selected="true">จัดเก็บไฟล์<span class="badge" id="nPend" hidden>0</span></button>
+    <button class="tab" role="tab" id="t-search" aria-selected="false">ค้นหา</button>
+  </div>
+</header>
+
+<main>
+  <section id="p-save">
+    <div id="pendBox"></div>
+    <div class="label" id="pickLabel">เลือกโฟลเดอร์ปลายทาง</div>
+    <input class="search" id="fq" placeholder="🔎 พิมพ์ชื่อโฟลเดอร์ เช่น ทันต, แผน">
+    <div id="quick"></div>
+    <div class="label">📂 โฟลเดอร์ทั้งหมด</div>
+    <div class="tree" id="tree"></div>
+    <p style="text-align:center;margin-top:12px"><button class="btn ghost" style="color:var(--muted)" id="refresh">🔄 อัปเดตรายชื่อโฟลเดอร์</button></p>
+  </section>
+
+  <section id="p-search" hidden>
+    <form id="sf"><input class="search" id="sq" type="search" placeholder="🔎 ค้นชื่อไฟล์ หรือข้อความในไฟล์" enterkeyhint="search"></form>
+    <div id="sres" style="margin-top:12px"></div>
+  </section>
+</main>
+
+<div class="bar" id="bar" hidden>
+  <div class="to" id="barTo">ยังไม่ได้เลือกโฟลเดอร์</div>
+  <button class="btn" id="saveBtn" disabled>บันทึก</button>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const params = new URLSearchParams(location.search);
+const DEMO = params.get('demo') === '1' || LIFF_ID.startsWith('ใส่');
+let S = { folders: [], central: [], recent: [], pending: [], selFolder: null, open: new Set(), idToken: '', chatKey: params.get('c') || '' };
+
+function toast(t, ms = 2600) {
+  const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d);
+  setTimeout(() => d.remove(), ms);
+}
+
+/* ---------- API ---------- */
+async function api(action, data = {}) {
+  if (DEMO) return demoApi(action, data);
+  const r = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, idToken: S.idToken, chatKey: S.chatKey, ...data }) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j;
+}
+
+/* ---------- เริ่มต้น ---------- */
+async function start() {
+  try {
+    if (!DEMO) {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) return liff.login();
+      S.idToken = liff.getIDToken();
+    }
+    const d = await api('init');
+    Object.assign(S, { folders: d.folders, central: d.central, recent: d.recent, pending: d.pending, driveUrl: d.driveUrl });
+    $('#who').textContent = 'สวัสดี ' + d.user.name;
+    S.folders.filter((f) => f.depth === 0).forEach((f) => S.open.add(f.id));
+    renderPending(); renderQuick(); renderTree();
+    if (params.get('tab') === 'search') { showTab('search'); if (params.get('q')) { $('#sq').value = params.get('q'); doSearch(); } }
+  } catch (e) {
+    $('#who').textContent = '⚠️ ' + e.message;
+  }
+}
+
+/* ---------- แท็บ ---------- */
+function showTab(t) {
+  $('#t-save').setAttribute('aria-selected', t === 'save'); $('#t-search').setAttribute('aria-selected', t === 'search');
+  $('#p-save').hidden = t !== 'save'; $('#p-search').hidden = t !== 'search';
+  $('#bar').hidden = t !== 'save' || !S.pending.length;
+  if (t === 'search') setTimeout(() => $('#sq').focus(), 50);
+}
+$('#t-save').onclick = () => showTab('save');
+$('#t-search').onclick = () => showTab('search');
+
+/* ---------- ไฟล์รอจัดเก็บ ---------- */
+function renderPending() {
+  const n = S.pending.length;
+  $('#nPend').hidden = !n; $('#nPend').textContent = n;
+  $('#bar').hidden = !n || $('#p-save').hidden;
+  $('#pickLabel').textContent = n ? 'เลือกโฟลเดอร์ปลายทาง' : 'เรียกดูโฟลเดอร์ (แตะเพื่อเปิดใน Drive)';
+  if (!n) {
+    $('#pendBox').innerHTML = '<div class="card empty">ไม่มีไฟล์รอจัดเก็บ<br><span class="meta">ส่งหรือแชร์ไฟล์มาที่แชท OA แล้วกด “เลือกโฟลเดอร์อื่น”</span></div>';
+    return;
+  }
+  $('#pendBox').innerHTML = '<div class="label" style="margin-top:4px">📥 ไฟล์รอจัดเก็บ (แก้ชื่อได้)</div><div class="card">' +
+    S.pending.map((p) => `<label class="file">
+      <input type="checkbox" checked data-id="${esc(p.fileId)}">
+      <div><input type="text" data-name="${esc(p.fileId)}" value="${esc(p.name)}">
+      <div class="meta">${p.sizeKB ? (p.sizeKB > 1024 ? (p.sizeKB / 1024).toFixed(1) + ' MB' : p.sizeKB + ' KB') : ''}</div></div>
+    </label>`).join('') +
+    '<button class="btn ghost" id="cancelBtn">✖ ยกเลิกไฟล์ที่เลือก</button></div>';
+  $('#pendBox').querySelectorAll('input[type=checkbox]').forEach((c) => (c.onchange = updateBar));
+  $('#cancelBtn').onclick = cancelSel;
+  updateBar();
+}
+const selIds = () => [...document.querySelectorAll('#pendBox input[type=checkbox]:checked')].map((c) => c.dataset.id);
+
+function updateBar() {
+  const f = S.folders.find((x) => x.id === S.selFolder);
+  const n = selIds().length;
+  $('#barTo').textContent = f ? '→ ' + f.path : 'ยังไม่ได้เลือกโฟลเดอร์';
+  $('#saveBtn').disabled = !f || !n;
+  $('#saveBtn').textContent = 'บันทึก ' + n + ' ไฟล์';
+}
+
+/* ---------- เลือกโฟลเดอร์ ---------- */
+function pickFolder(id) {
+  if (!S.pending.length) { // โหมดเรียกดู
+    window.open('https://drive.google.com/drive/folders/' + id, '_blank');
+    return;
+  }
+  S.selFolder = id;
+  renderQuick(); renderTree(); updateBar();
+}
+
+function renderQuick() {
+  const q = $('#fq').value.trim().toLowerCase();
+  const chip = (f, icon) => `<button class="chip ${S.selFolder === f.id ? 'sel' : ''}" data-f="${esc(f.id)}" title="${esc(f.path)}">${icon} ${esc(f.name)}</button>`;
+  let html = '';
+  if (q) {
+    const hits = S.folders.filter((f) => f.path.toLowerCase().includes(q)).slice(0, 40);
+    html = '<div class="label">ผลการค้นหาโฟลเดอร์</div>' + (hits.length
+      ? '<div class="tree">' + hits.map((f) => `<div class="node ${S.selFolder === f.id ? 'sel' : ''}"><div class="row" data-f="${esc(f.id)}">
+          <span>📁</span><div class="nm">${esc(f.name)}<div class="path">${esc(f.path)}</div></div></div></div>`).join('') + '</div>'
+      : '<div class="empty">ไม่พบโฟลเดอร์</div>');
+  } else {
+    const cen = S.central.map((id) => S.folders.find((f) => f.id === id)).filter(Boolean);
+    const rec = S.recent.map((id) => S.folders.find((f) => f.id === id)).filter((f) => f && !S.central.includes(f.id)).slice(0, 6);
+    html = '<div class="label"><span class="star">⭐</span> โฟลเดอร์กลาง</div><div class="chips">' + cen.map((f) => chip(f, '⭐')).join('') + '</div>';
+    if (rec.length) html += '<div class="label">🕘 ใช้ล่าสุด</div><div class="chips">' + rec.map((f) => chip(f, '📁')).join('') + '</div>';
+  }
+  $('#quick').innerHTML = html;
+  $('#quick').querySelectorAll('[data-f]').forEach((b) => (b.onclick = () => pickFolder(b.dataset.f)));
+}
+$('#fq').oninput = renderQuick;
+
+function renderTree() {
+  const kids = {};
+  S.folders.forEach((f) => { (kids[f.parentId || '_'] = kids[f.parentId || '_'] || []).push(f); });
+  const node = (f) => {
+    const ch = kids[f.id] || [];
+    const open = S.open.has(f.id);
+    return `<div class="node ${S.selFolder === f.id ? 'sel' : ''}">
+      <div class="row" data-f="${esc(f.id)}" style="padding-left:${12 + f.depth * 18}px">
+        <button class="tog" data-t="${esc(f.id)}" aria-label="ขยาย">${ch.length ? (open ? '▾' : '▸') : ''}</button>
+        <span>${f.type === 'central' && f.depth === 0 ? '⭐' : '📁'}</span><div class="nm">${esc(f.name)}</div>
+      </div>
+      ${ch.length ? `<div class="kids" ${open ? '' : 'hidden'}>${ch.map(node).join('')}</div>` : ''}
+    </div>`;
+  };
+  const roots = (kids['_'] || []).sort((a, b) => (a.type === 'central' ? 0 : 1) - (b.type === 'central' ? 0 : 1));
+  $('#tree').innerHTML = roots.map(node).join('') || '<div class="empty">ไม่มีโฟลเดอร์</div>';
+  $('#tree').querySelectorAll('.row').forEach((r) => (r.onclick = (e) => {
+    const t = e.target.closest('[data-t]');
+    if (t && t.textContent.trim()) {
+      e.stopPropagation();
+      S.open.has(t.dataset.t) ? S.open.delete(t.dataset.t) : S.open.add(t.dataset.t);
+      return renderTree();
+    }
+    pickFolder(r.dataset.f);
+  }));
+}
+
+$('#refresh').onclick = async () => {
+  $('#refresh').innerHTML = '<span class="spin"></span> กำลังอัปเดต…';
+  try { const d = await api('refresh'); S.folders = d.folders; renderQuick(); renderTree(); toast('อัปเดตแล้ว ' + d.folders.length + ' โฟลเดอร์'); }
+  catch (e) { toast('⚠️ ' + e.message); }
+  $('#refresh').textContent = '🔄 อัปเดตรายชื่อโฟลเดอร์';
+};
+
+/* ---------- บันทึก / ยกเลิก ---------- */
+$('#saveBtn').onclick = async () => {
+  const ids = selIds();
+  const names = {};
+  ids.forEach((id) => {
+    const inp = document.querySelector(`[data-name="${CSS.escape(id)}"]`);
+    const old = S.pending.find((p) => p.fileId === id).name;
+    if (inp && inp.value.trim() && inp.value.trim() !== old) names[id] = inp.value.trim();
+  });
+  $('#saveBtn').disabled = true; $('#saveBtn').innerHTML = '<span class="spin"></span> กำลังบันทึก…';
+  try {
+    const d = await api('move', { fileIds: ids, folderId: S.selFolder, names });
+    S.pending = S.pending.filter((p) => !ids.includes(p.fileId));
+    S.recent = [S.selFolder].concat(S.recent.filter((x) => x !== S.selFolder));
+    showDone(d);
+    try {
+      const ctx = liff.getContext && liff.getContext();
+      if (!DEMO && ctx && ['utou', 'group', 'room'].includes(ctx.type)) {
+        await liff.sendMessages([{ type: 'text', text: `📁 บันทึก ${d.files.length} ไฟล์ → ${d.folder.path}\n` + d.files.map((f) => '• ' + f.name).join('\n') }]);
+      }
+    } catch (e) { /* ส่งข้อความกลับแชทไม่ได้ ไม่เป็นไร */ }
+  } catch (e) {
+    toast('⚠️ ' + e.message); updateBar();
+  }
+};
+
+function showDone(d) {
+  $('#bar').hidden = true;
+  $('#pendBox').innerHTML = `<div class="card"><div class="ok">✅ บันทึกแล้ว ${d.files.length} ไฟล์</div>
+    <div class="meta">📁 ${esc(d.folder.path)}</div>
+    ${d.files.map((f) => `<a class="res" href="${esc(f.url)}" target="_blank"><b>${esc(f.name)}</b></a>`).join('')}
+    <a class="btn" style="margin-top:10px" href="https://drive.google.com/drive/folders/${esc(d.folder.id)}" target="_blank">เปิดโฟลเดอร์</a>
+    ${S.pending.length ? `<button class="btn ghost" style="color:var(--accent)" id="more">ยังมีอีก ${S.pending.length} ไฟล์ — จัดเก็บต่อ</button>` : ''}
+    ${!DEMO && liff.isInClient && liff.isInClient() ? '<button class="btn ghost" style="color:var(--muted)" id="close">ปิดหน้านี้</button>' : ''}</div>`;
+  S.selFolder = null; renderQuick(); renderTree();
+  $('#nPend').hidden = !S.pending.length; $('#nPend').textContent = S.pending.length;
+  if ($('#more')) $('#more').onclick = renderPending;
+  if ($('#close')) $('#close').onclick = () => liff.closeWindow();
+  window.scrollTo(0, 0);
+}
+
+async function cancelSel() {
+  const ids = selIds();
+  if (!ids.length) return;
+  if (!confirm('ยกเลิก ' + ids.length + ' ไฟล์? (ไฟล์จะถูกย้ายไปถังขยะ)')) return;
+  try {
+    await api('cancel', { fileIds: ids });
+    S.pending = S.pending.filter((p) => !ids.includes(p.fileId));
+    renderPending(); toast('ยกเลิกแล้ว ' + ids.length + ' ไฟล์');
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+
+/* ---------- ค้นหา ---------- */
+$('#sf').onsubmit = (e) => { e.preventDefault(); doSearch(); };
+async function doSearch() {
+  const q = $('#sq').value.trim();
+  if (!q) return;
+  $('#sq').blur();
+  const fHits = S.folders.filter((f) => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 5);
+  const fHtml = fHits.length ? '<div class="label">📂 โฟลเดอร์</div><div class="card">' + fHits.map((f) =>
+    `<a class="res" href="https://drive.google.com/drive/folders/${esc(f.id)}" target="_blank"><b>📁 ${esc(f.name)}</b><div class="path">${esc(f.path)}</div></a>`).join('') + '</div>' : '';
+  $('#sres').innerHTML = fHtml + '<div class="empty"><span class="spin"></span> กำลังค้นหาไฟล์…</div>';
+  try {
+    const d = await api('search', { q });
+    $('#sres').innerHTML = fHtml + '<div class="label">📄 ไฟล์ (' + d.results.length + ')</div>' + (d.results.length
+      ? '<div class="card">' + d.results.map((r) => `<a class="res" href="${esc(r.url)}" target="_blank"><b>${esc(r.name)}</b>
+          <div class="path">📁 ${esc(r.path)} · แก้ไข ${esc(r.updated)}</div></a>`).join('') + '</div>'
+      : '<div class="card empty">ไม่พบไฟล์ที่ตรงกับ “' + esc(q) + '”</div>');
+  } catch (e) {
+    $('#sres').innerHTML = fHtml + '<div class="card empty">⚠️ ' + esc(e.message) + '</div>';
+  }
+}
+
+/* ---------- โหมดตัวอย่าง (?demo=1) ไว้ดูหน้าตาโดยไม่ต้องต่อระบบจริง ---------- */
+function demoApi(action, data) {
+  const F = (id, name, parentId, path, depth, type) => ({ id, name, parentId, path, depth, type });
+  const folders = [
+    F('c1', 'แบบฟอร์มและแม่แบบ', '', 'แบบฟอร์มและแม่แบบ', 0, 'central'),
+    F('c2', 'ระเบียบ คู่มือ แนวทาง', '', 'ระเบียบ คู่มือ แนวทาง', 0, 'central'),
+    F('w0', 'กลุ่มงานทันตสาธารณสุข', '', 'กลุ่มงานทันตสาธารณสุข', 0, 'work'),
+    F('w1', 'งานส่งเสริมป้องกัน', 'w0', 'กลุ่มงานทันตสาธารณสุข / งานส่งเสริมป้องกัน', 1, 'work'),
+    F('w11', 'PPA เด็ก 3-5 ปี', 'w1', 'กลุ่มงานทันตสาธารณสุข / งานส่งเสริมป้องกัน / PPA เด็ก 3-5 ปี', 2, 'work'),
+    F('w12', 'ผู้สูงอายุ', 'w1', 'กลุ่มงานทันตสาธารณสุข / งานส่งเสริมป้องกัน / ผู้สูงอายุ', 2, 'work'),
+    F('w2', 'งานแผนและยุทธศาสตร์', 'w0', 'กลุ่มงานทันตสาธารณสุข / งานแผนและยุทธศาสตร์', 1, 'work'),
+    F('w21', 'Service Plan เขต 9', 'w2', 'กลุ่มงานทันตสาธารณสุข / งานแผนและยุทธศาสตร์ / Service Plan เขต 9', 2, 'work'),
+    F('w22', 'งบประมาณ 2570', 'w2', 'กลุ่มงานทันตสาธารณสุข / งานแผนและยุทธศาสตร์ / งบประมาณ 2570', 2, 'work'),
+    F('w3', 'งานบริการและระบบส่งต่อ', 'w0', 'กลุ่มงานทันตสาธารณสุข / งานบริการและระบบส่งต่อ', 1, 'work'),
+    F('w4', 'งานสารบรรณ', 'w0', 'กลุ่มงานทันตสาธารณสุข / งานสารบรรณ', 1, 'work'),
+    F('w41', 'หนังสือเข้า', 'w4', 'กลุ่มงานทันตสาธารณสุข / งานสารบรรณ / หนังสือเข้า', 2, 'work'),
+    F('w42', 'หนังสือออก', 'w4', 'กลุ่มงานทันตสาธารณสุข / งานสารบรรณ / หนังสือออก', 2, 'work'),
+  ];
+  const wait = (v) => new Promise((r) => setTimeout(() => r(v), 400));
+  if (action === 'init') return wait({ ok: true, user: { name: 'หมอนิดิโชติ (ตัวอย่าง)' }, folders, central: ['c1', 'c2'], recent: ['w21', 'w41'],
+    pending: [{ fileId: 'p1', name: 'หนังสือเชิญประชุม SP ทันตฯ.pdf', sizeKB: 820 }, { fileId: 'p2', name: 'รูป_2026-10-27_0915_หมอนิด_4821.jpg', sizeKB: 2310 }] });
+  if (action === 'move') { const folder = folders.find((f) => f.id === data.folderId);
+    return wait({ ok: true, folder, files: data.fileIds.map((id) => ({ id, name: data.names[id] || (id === 'p1' ? 'หนังสือเชิญประชุม SP ทันตฯ.pdf' : 'รูป_2026-10-27_0915_หมอนิด_4821.jpg'), url: '#' })) }); }
+  if (action === 'cancel') return wait({ ok: true, count: data.fileIds.length });
+  if (action === 'refresh') return wait({ ok: true, folders });
+  if (action === 'search') return wait({ ok: true, results: [
+    { name: 'แผนยุทธศาสตร์สุขภาพช่องปาก 2570-2572.docx', url: '#', path: folders[7].path, updated: '20/10/2569' },
+    { name: 'สรุปผล PPA ไตรมาส 4.xlsx', url: '#', path: folders[4].path, updated: '15/10/2569' }] });
+}
+
+start();
+</script>
+</body>
+</html>
