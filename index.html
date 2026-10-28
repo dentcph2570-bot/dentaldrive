@@ -10,7 +10,7 @@
 <script>
   /* ===== ตั้งค่า: แก้ 2 บรรทัดนี้ ===== */
   const LIFF_ID = '2012248951-Bzd00kL2';
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxqj7rUYJ5fXYig87Bgaw_7-WS3eAsXOlNRx-3X7VEGoYDrQo5k38WHeSJkBkIkuI4O/exec';   // https://script.google.com/macros/s/xxxx/exec
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxxKX9skqWSgfagbR_ZKn7eEPIEITFpLxyG4gI55JhP5BRYSEdy9tnqhmI8TnhfRJpj/exec';   // https://script.google.com/macros/s/xxxx/exec
 </script>
 <style>
   :root {
@@ -162,7 +162,7 @@ async function start() {
 function showTab(t) {
   $('#t-save').setAttribute('aria-selected', t === 'save'); $('#t-search').setAttribute('aria-selected', t === 'search');
   $('#p-save').hidden = t !== 'save'; $('#p-search').hidden = t !== 'search';
-  $('#bar').hidden = t !== 'save' || !S.pending.length;
+  updateBar();
   if (t === 'search') setTimeout(() => $('#sq').focus(), 50);
 }
 $('#t-save').onclick = () => showTab('save');
@@ -172,10 +172,10 @@ $('#t-search').onclick = () => showTab('search');
 function renderPending() {
   const n = S.pending.length;
   $('#nPend').hidden = !n; $('#nPend').textContent = n;
-  $('#bar').hidden = !n || $('#p-save').hidden;
-  $('#pickLabel').textContent = n ? 'เลือกโฟลเดอร์ปลายทาง' : 'เรียกดูโฟลเดอร์ (แตะเพื่อเปิดใน Drive)';
+  $('#pickLabel').textContent = n ? 'เลือกโฟลเดอร์ปลายทาง' : 'เรียกดูโฟลเดอร์ (ไม่มีไฟล์รอจัดเก็บ)';
   if (!n) {
     $('#pendBox').innerHTML = '<div class="card empty">ไม่มีไฟล์รอจัดเก็บ<br><span class="meta">ส่งหรือแชร์ไฟล์มาที่แชท OA แล้วกด “เลือกโฟลเดอร์อื่น”</span></div>';
+    updateBar();
     return;
   }
   $('#pendBox').innerHTML = '<div class="label" style="margin-top:4px">📥 ไฟล์รอจัดเก็บ (แก้ชื่อได้)</div><div class="card">' +
@@ -194,18 +194,16 @@ const selIds = () => [...document.querySelectorAll('#pendBox input[type=checkbox
 function updateBar() {
   const f = S.folders.find((x) => x.id === S.selFolder);
   const n = selIds().length;
+  const browse = !S.pending.length;
+  $('#bar').hidden = $('#p-save').hidden || (browse && !f);
   $('#barTo').textContent = f ? '→ ' + f.path : 'ยังไม่ได้เลือกโฟลเดอร์';
-  $('#saveBtn').disabled = !f || !n;
-  $('#saveBtn').textContent = 'บันทึก ' + n + ' ไฟล์';
+  $('#saveBtn').disabled = browse ? !f : !f || !n;
+  $('#saveBtn').textContent = browse ? 'เปิดโฟลเดอร์นี้ใน Google Drive ↗' : 'บันทึก ' + n + ' ไฟล์';
 }
 
 /* ---------- เลือกโฟลเดอร์ ---------- */
 function pickFolder(id) {
-  if (!S.pending.length) { // โหมดเรียกดู
-    window.open('https://drive.google.com/drive/folders/' + id, '_blank');
-    return;
-  }
-  S.selFolder = id;
+  S.selFolder = id; // ไม่มีไฟล์รอ = โหมดเรียกดู: เลือกแล้วค่อยกดปุ่มเปิดใน Drive
   renderQuick(); renderTree(); updateBar();
 }
 
@@ -266,6 +264,10 @@ $('#refresh').onclick = async () => {
 
 /* ---------- บันทึก / ยกเลิก ---------- */
 $('#saveBtn').onclick = async () => {
+  if (!S.pending.length) { // โหมดเรียกดู
+    if (S.selFolder) window.open('https://drive.google.com/drive/folders/' + S.selFolder, '_blank');
+    return;
+  }
   const ids = selIds();
   const names = {};
   ids.forEach((id) => {
